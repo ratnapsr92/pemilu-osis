@@ -1,121 +1,68 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useEffect, useState } from 'react'
+import { supabase } from './supabase'
+import Login from './Login'
+import Kandidat from './Kandidat'
+import Admin from './Admin'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [session, setSession] = useState(null)
+  const [profil, setProfil] = useState(null)
+  const [votingDibuka, setVotingDibuka] = useState(false)
+
+  // Cek apakah pengguna sudah login
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session))
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => setSession(session)
+    )
+    return () => subscription.unsubscribe()
+  }, [])
+
+  // Ambil profil dan status voting setelah login
+  useEffect(() => {
+    if (!session) {
+      setProfil(null)
+      return
+    }
+    supabase.from('profiles').select('*').eq('id', session.user.id).single()
+      .then(({ data }) => setProfil(data))
+
+    supabase.from('pengaturan').select('voting_dibuka').eq('id', 1).single()
+      .then(({ data }) => setVotingDibuka(data ? data.voting_dibuka : false))
+  }, [session])
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
+    <main style={{ textAlign: 'center', padding: '48px 16px' }}>
+      <h1>PEMILU OSIS SMPN 2 SEMANDING</h1>
+
+      {!session && <Login />}
+
+      {session && profil && (
         <div>
-          <h1>Pemilu OSIS Digital</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+          <p>Halo, <b>{profil.nama}</b> {profil.kelas && `(${profil.kelas})`}</p>
 
-      <div className="ticks"></div>
+          {profil.peran === 'admin' ? (
+            <Admin />
+          ) : profil.sudah_memilih ? (
+            <div>
+              <h2>Terima kasih! ✅</h2>
+              <p>Suara Anda sudah tercatat. Pilihan Anda dirahasiakan.</p>
+            </div>
+          ) : (
+            <Kandidat
+              dibuka={votingDibuka}
+              onSelesai={() => setProfil({ ...profil, sudah_memilih: true })}
+            />
+          )}
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+          <button onClick={() => supabase.auth.signOut()}
+            style={{ padding: '10px 20px', marginTop: '24px' }}>
+            Keluar
+          </button>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      )}
+    </main>
   )
 }
 

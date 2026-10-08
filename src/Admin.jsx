@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { supabase } from './supabase'
 import MejaPanitia from './MejaPanitia'
 
 const gayaKotak = {

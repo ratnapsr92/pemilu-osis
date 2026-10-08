@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from './supabase'
+import MejaPanitia from './MejaPanitia'
 
 const gayaKotak = {
   border: '1px solid #ddd', borderRadius: '12px', padding: '16px', marginBottom: '16px'
@@ -76,6 +76,8 @@ function Admin() {
           {dibuka ? 'Tutup Voting' : 'Buka Voting'}
         </button>
       </section>
+
+      {dibuka && <MejaPanitia />}
 
       <section style={gayaKotak}>
         <h3>Partisipasi Pemilih</h3>

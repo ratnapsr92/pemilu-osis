@@ -3,10 +3,12 @@ import { supabase } from './supabase'
 import Login from './Login'
 import Admin from './Admin'
 import Bilik from './Bilik'
+import Kampanye from './Kampanye'
 
 function App() {
   const [session, setSession] = useState(null)
   const [profil, setProfil] = useState(null)
+  const [tampilLogin, setTampilLogin] = useState(false)
 
   // Cek apakah perangkat ini sudah login
   useEffect(() => {
@@ -29,11 +31,29 @@ function App() {
   }, [session])
 
   return (
-    <main style={{ textAlign: 'center', padding: '48px 16px' }}>
+    <main style={{ textAlign: 'center', padding: '32px 16px' }}>
       <h1>PEMILU OSIS SMPN 2 SEMANDING</h1>
 
-      {!session && <Login />}
+      {/* Pengunjung umum: halaman kampanye */}
+      {!session && !tampilLogin && (
+        <div>
+          <Kampanye />
+          <button onClick={() => setTampilLogin(true)}
+            style={{ marginTop: '48px', fontSize: '13px', opacity: 0.6 }}>
+            Masuk Panitia / Bilik
+          </button>
+        </div>
+      )}
 
+      {/* Halaman login panitia/bilik */}
+      {!session && tampilLogin && (
+        <div>
+          <Login />
+          <button onClick={() => setTampilLogin(false)}>← Kembali ke kampanye</button>
+        </div>
+      )}
+
+      {/* Panitia */}
       {session && profil?.peran === 'admin' && (
         <div>
           <p>Halo, <b>{profil.nama}</b></p>
@@ -45,6 +65,7 @@ function App() {
         </div>
       )}
 
+      {/* Tablet bilik */}
       {session && profil?.peran === 'bilik' && <Bilik namaBilik={profil.nama} />}
     </main>
   )

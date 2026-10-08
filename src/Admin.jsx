@@ -24,18 +24,15 @@ function Admin() {
   async function muatData() {
     setPesan('')
 
-    // Status voting
     const { data: atur } = await supabase
       .from('pengaturan').select('voting_dibuka').eq('id', 1).single()
     const statusDibuka = atur ? atur.voting_dibuka : false
     setDibuka(statusDibuka)
 
-    // Partisipasi
     const { data: p, error: e1 } = await supabase.rpc('partisipasi')
     if (e1) setPesan(e1.message)
     else setPartisipasi(p[0])
 
-    // Hasil (hanya jika voting ditutup)
     if (!statusDibuka) {
       const { data: h, error: e2 } = await supabase.rpc('hasil_suara')
       if (e2) setPesan(e2.message)
@@ -45,7 +42,6 @@ function Admin() {
     }
   }
 
-  // Muat data saat halaman dibuka, lalu ulangi setiap 10 detik
   useEffect(() => {
     muatData()
     const timer = setInterval(muatData, 10000)
@@ -64,7 +60,13 @@ function Admin() {
   const total = partisipasi ? Number(partisipasi.total) : 0
   const sudah = partisipasi ? Number(partisipasi.sudah) : 0
   const persenHadir = total > 0 ? Math.round((sudah / total) * 100) : 0
-  const totalSuara = hasil.reduce((jumlah, h) => jumlah + Number(h.jumlah), 0)
+
+  // Kelompokkan hasil per organisasi
+  const kelompok = {}
+  for (const h of hasil) {
+    if (!kelompok[h.nama_organisasi]) kelompok[h.nama_organisasi] = []
+    kelompok[h.nama_organisasi].push(h)
+  }
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'left' }}>
@@ -82,7 +84,7 @@ function Admin() {
 
       <section style={gayaKotak}>
         <h3>Partisipasi Pemilih</h3>
-        <p>{sudah} dari {total} pemilih sudah memilih ({persenHadir}%)</p>
+        <p>{sudah} dari {total} pemilih sudah selesai memilih ({persenHadir}%)</p>
         <Batang persen={persenHadir} />
       </section>
 
@@ -91,12 +93,20 @@ function Admin() {
         {dibuka ? (
           <p>Hasil akan tampil setelah voting ditutup.</p>
         ) : (
-          hasil.map((h) => {
-            const persen = totalSuara > 0 ? Math.round((Number(h.jumlah) / totalSuara) * 100) : 0
+          Object.entries(kelompok).map(([namaOrg, daftar]) => {
+            const totalSuara = daftar.reduce((jumlah, h) => jumlah + Number(h.jumlah), 0)
             return (
-              <div key={h.kandidat_id} style={{ marginBottom: '12px' }}>
-                <p>{h.nomor_urut}. {h.nama_ketua}: <b>{h.jumlah} suara</b> ({persen}%)</p>
-                <Batang persen={persen} />
+              <div key={namaOrg} style={{ marginBottom: '24px' }}>
+                <h4>{namaOrg} (total {totalSuara} suara)</h4>
+                {daftar.map((h) => {
+                  const persen = totalSuara > 0 ? Math.round((Number(h.jumlah) / totalSuara) * 100) : 0
+                  return (
+                    <div key={h.kandidat_id} style={{ marginBottom: '12px' }}>
+                      <p>{h.nomor_urut}. {h.nama_ketua}: <b>{h.jumlah} suara</b> ({persen}%)</p>
+                      <Batang persen={persen} />
+                    </div>
+                  )
+                })}
               </div>
             )
           })

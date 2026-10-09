@@ -1,7 +1,7 @@
 // Logo PILANG: kotak suara dengan kertas suara bercentang
 export function LogoPilang() {
   return (
-    <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+     <svg width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <rect width="64" height="64" rx="14" fill="#4f46e5" />
       <rect x="14" y="30" width="36" height="22" rx="4" fill="#ffffff" />
       <rect x="24" y="10" width="16" height="22" rx="3" fill="#f59e0b" />
@@ -13,34 +13,47 @@ export function LogoPilang() {
 }
 
 // Logo instansi (file ada di folder public/logo)
-const daftarLogo = [
+export const daftarLogo = [
   { src: '/logo/kabupaten.png', alt: 'Logo Kabupaten Tuban' },
   { src: '/logo/sekolah.png', alt: 'Logo UPT SMP Negeri 2 Semanding' },
   { src: '/logo/osis.png', alt: 'Logo OSIS' },
   { src: '/logo/dewan.png', alt: 'Logo Dewan' },
 ]
-
-function Kepala({ subjudul }) {
+// Bilah navigasi atas
+export function Navbar({ menu = [], aktif, onPilih, kanan }) {
   return (
-    <header className="kepala">
+    <nav className="navbar">
+      <div className="navbar-isi">
+        <div className="navbar-merek">
+          <LogoPilang />
+          <span>PILANG</span>
+        </div>
+        <div className="navbar-menu">
+          {menu.map((m) => (
+            <button key={m.id} className={aktif === m.id ? 'aktif' : ''} onClick={() => onPilih(m.id)}>
+              {m.label}
+            </button>
+          ))}
+          {kanan}
+        </div>
+      </div>
+    </nav>
+  )
+}
+
+// Banner pembuka halaman
+export function Hero({ label, judul, teks }) {
+  return (
+    <section className="hero">
       <div className="deret-logo">
         {daftarLogo.map((logo) => (
           <img key={logo.src} src={logo.src} alt={logo.alt}
             onError={(e) => { e.currentTarget.style.display = 'none' }} />
         ))}
       </div>
-
-      <div className="merek">
-        <LogoPilang />
-        <div>
-          <div className="merek-nama">PILANG</div>
-          <div className="merek-tagline">Pilihan Langsung · Rahasia, Nirkertas, Akuntabel</div>
-        </div>
-      </div>
-
-      <div className="kepala-sekolah">{subjudul}</div>
-    </header>
+      <span className="hero-label">{label}</span>
+      <h1>{judul}</h1>
+      <p>{teks}</p>
+    </section>
   )
 }
-
-export default Kepala

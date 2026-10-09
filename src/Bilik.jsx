@@ -7,26 +7,30 @@ const gayaTombolMenu = {
   padding: '20px', fontSize: '22px', borderRadius: '12px'
 }
 
-function Bilik({ namaBilik }) {
+function Bilik({ namaBilik, onTerlepas }) {
   const [organisasi, setOrganisasi] = useState([])
   const [giliran, setGiliran] = useState(null)
   const [pilihanOrg, setPilihanOrg] = useState(null)
   const [selesai, setSelesai] = useState(false)
 
-  // Cek apakah panitia sudah mengirim pemilih ke bilik ini
+  // Cek status bilik & giliran pemilih
   async function cek() {
-    const { data } = await supabase.rpc('giliran_saya')
-    const g = data && data.length > 0 ? data[0] : null
+    const { data, error } = await supabase.rpc('giliran_saya')
+    if (error) return
+    if (!data || data.length === 0) {
+      onTerlepas()   // bilik dilepas / dihapus admin
+      return
+    }
+    const baris = data[0]
+    const g = baris.nama ? { nama: baris.nama, kelas: baris.kelas, sudah: baris.sudah || [] } : null
     setGiliran(g)
     if (!g) setPilihanOrg(null)
   }
-
   useEffect(() => {
     supabase.from('organisasi').select('*').order('urutan')
       .then(({ data }) => {
         if (data) setOrganisasi(data)
       })
-
     cek()
     const timer = setInterval(cek, 3000)
     return () => clearInterval(timer)
@@ -39,15 +43,10 @@ function Bilik({ namaBilik }) {
       setGiliran(null)
       setTimeout(() => setSelesai(false), 5000)
     } else {
-      cek() // perbarui tanda ✅ di menu
+      cek()
     }
   }
-
-  function keluar() {
-    if (window.confirm('Keluarkan tablet ini dari akun bilik?')) supabase.auth.signOut()
-  }
-
-  // Layar terima kasih
+      // Layar terima kasih
   if (selesai) {
     return (
       <div>
@@ -57,15 +56,12 @@ function Bilik({ namaBilik }) {
     )
   }
 
-  // Layar menunggu
+  // Layar menunggu giliran
   if (!giliran) {
     return (
       <div>
         <h2>{namaBilik}</h2>
         <p style={{ fontSize: '22px' }}>Silakan menunggu giliran dari panitia.</p>
-        <button onClick={keluar} style={{ marginTop: '48px', fontSize: '12px', opacity: 0.5 }}>
-          Keluar
-        </button>
       </div>
     )
   }
@@ -73,11 +69,7 @@ function Bilik({ namaBilik }) {
   // Surat suara organisasi yang dipilih
   if (pilihanOrg) {
     return (
-      <Kandidat
-        organisasi={pilihanOrg}
-        onSelesai={setelahMemilih}
-        onKembali={() => setPilihanOrg(null)}
-      />
+      <Kandidat organisasi={pilihanOrg} onSelesai={setelahMemilih} onKembali={() => setPilihanOrg(null)} />
     )
   }
 
@@ -88,9 +80,8 @@ function Bilik({ namaBilik }) {
         Halo, <b>{giliran.nama}</b> {giliran.kelas && `(${giliran.kelas})`}
       </p>
       <p style={{ fontSize: '18px' }}>Silakan pilih surat suara:</p>
-
       {organisasi.map((o) => {
-        const sudah = (giliran.sudah || []).includes(o.id)
+        const sudah = giliran.sudah.includes(o.id)
         return (
           <button key={o.id} disabled={sudah} onClick={() => setPilihanOrg(o)} style={gayaTombolMenu}>
             {sudah ? `✅ ${o.nama} (sudah dipilih)` : `Pilih ${o.nama}`}

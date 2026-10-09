@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
 import KartuKandidat from './KartuKandidat'
 
-function Kampanye() {
+function Kampanye({ awalOrg }) {
   const [organisasi, setOrganisasi] = useState([])
   const [aktif, setAktif] = useState(null)
   const [kandidat, setKandidat] = useState([])
@@ -12,7 +12,7 @@ function Kampanye() {
       .then(({ data }) => {
         if (data && data.length > 0) {
           setOrganisasi(data)
-          setAktif(data[0].id)
+          setAktif(awalOrg ?? data[0].id)
         }
       })
 

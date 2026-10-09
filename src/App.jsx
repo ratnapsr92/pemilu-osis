@@ -6,8 +6,7 @@ import Bilik from './Bilik'
 import Kampanye from './Kampanye'
 import Proker from './Proker'
 import KelolaProker from './KelolaProker'
-
-const gayaTombolKecil = { fontSize: '13px', opacity: 0.7, padding: '6px 12px' }
+import Kepala from './Kepala'
 
 function App() {
   const [session, setSession] = useState(null)
@@ -17,25 +16,21 @@ function App() {
   const [halaman, setHalaman] = useState(null)
   const [halamanAdmin, setHalamanAdmin] = useState('pemilu')
 
-  // Cek apakah perangkat ini sudah login
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session))
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => setSession(session)
     )
     return () => subscription.unsubscribe()
   }, [])
 
-  // Halaman beranda yang dipilih panitia (kampanye / proker)
   useEffect(() => {
-    supabase.from('pengaturan').select('beranda').eq('id', 1).single()
+        supabase.from('pengaturan').select('beranda').eq('id', 1).single()
       .then(({ data }) => {
         if (data) setBeranda(data.beranda)
       })
   }, [])
 
-  // Ambil profil (admin, bilik, atau pengurus)
   useEffect(() => {
     if (!session) {
       setProfil(null)
@@ -44,55 +39,49 @@ function App() {
     supabase.from('profiles').select('*').eq('id', session.user.id).single()
       .then(({ data }) => setProfil(data))
   }, [session])
-
-  const tampil = halaman ?? beranda
+        const tampil = halaman ?? beranda
+  const subjudul = tampil === 'proker' && !session
+    ? 'Organisasi Siswa UPT SMP Negeri 2 Semanding'
+    : 'Pemilu Organisasi Siswa UPT SMP Negeri 2 Semanding'
 
   const tombolKeluar = (
-    <button onClick={() => supabase.auth.signOut()}
-      style={{ padding: '10px 20px', marginTop: '24px' }}>
+    <button className="tombol-kedua" onClick={() => supabase.auth.signOut()} style={{ marginTop: '24px' }}>
       Keluar
     </button>
   )
 
   return (
-    <main style={{ textAlign: 'center', padding: '32px 16px' }}>
-      <h1>{tampil === 'proker' && !session ? 'ORGANISASI SISWA UPT SMP NEGERI 2 SEMANDING' : 'PEMILU ORGANISASI SISWA UPT SMP NEGERI 2 SEMANDING'}</h1>
+    <main style={{ textAlign: 'center', padding: '28px 16px' }}>
+      <Kepala subjudul={subjudul} />
 
-      {/* Pengunjung umum */}
       {!session && !tampilLogin && (
         <div>
           {tampil === 'proker' ? <Proker /> : <Kampanye />}
-
           <div style={{ marginTop: '48px', display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => setHalaman(tampil === 'proker' ? 'kampanye' : 'proker')} style={gayaTombolKecil}>
+            <button className="tombol-kedua" onClick={() => setHalaman(tampil === 'proker' ? 'kampanye' : 'proker')}>
               {tampil === 'proker' ? 'Lihat kampanye kandidat' : 'Lihat tracker proker'}
             </button>
-            <button onClick={() => setTampilLogin(true)} style={gayaTombolKecil}>
+            <button className="tombol-kedua" onClick={() => setTampilLogin(true)}>
               Masuk Panitia / Bilik / Pengurus
             </button>
           </div>
         </div>
       )}
 
-      {/* Halaman login */}
       {!session && tampilLogin && (
         <div>
           <Login />
-          <button onClick={() => setTampilLogin(false)}>← Kembali</button>
+          <button className="tombol-kedua" onClick={() => setTampilLogin(false)}>← Kembali</button>
         </div>
       )}
-
-      {/* Panitia (admin) */}
-      {session && profil?.peran === 'admin' && (
+            {session && profil?.peran === 'admin' && (
         <div>
           <p>Halo, <b>{profil.nama}</b></p>
-          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '16px' }}>
-            <button onClick={() => setHalamanAdmin('pemilu')}
-              style={{ padding: '8px 16px', fontWeight: halamanAdmin === 'pemilu' ? 'bold' : 'normal' }}>
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '16px', flexWrap: 'wrap' }}>
+            <button className={halamanAdmin === 'pemilu' ? '' : 'tombol-kedua'} onClick={() => setHalamanAdmin('pemilu')}>
               Dashboard Pemilu
             </button>
-            <button onClick={() => setHalamanAdmin('proker')}
-              style={{ padding: '8px 16px', fontWeight: halamanAdmin === 'proker' ? 'bold' : 'normal' }}>
+            <button className={halamanAdmin === 'proker' ? '' : 'tombol-kedua'} onClick={() => setHalamanAdmin('proker')}>
               Kelola Proker
             </button>
           </div>
@@ -101,7 +90,6 @@ function App() {
         </div>
       )}
 
-      {/* Pengurus OSIS / Dewan */}
       {session && profil?.peran === 'pengurus' && (
         <div>
           <p>Halo, <b>{profil.nama}</b></p>
@@ -110,8 +98,11 @@ function App() {
         </div>
       )}
 
-      {/* Tablet bilik */}
       {session && profil?.peran === 'bilik' && <Bilik namaBilik={profil.nama} />}
+
+      <footer className="kaki">
+        PILANG · UPT SMP Negeri 2 Semanding · Tubernova Award 2026
+      </footer>
     </main>
   )
 }

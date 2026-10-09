@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
 import MejaPanitia from './MejaPanitia'
 import BeritaAcara from './BeritaAcara'
+import ResetData from './ResetData'
 
 const gayaKotak = {
   border: '1px solid #ddd', borderRadius: '12px', padding: '16px', marginBottom: '16px'
@@ -165,6 +166,7 @@ function Admin() {
       </section>
 
       {!dibuka && <BeritaAcara />}
+      {!dibuka && <ResetData onSelesai={muatData} />}
 
       <section style={gayaKotak}>
         <h3>Halaman Beranda Publik</h3>

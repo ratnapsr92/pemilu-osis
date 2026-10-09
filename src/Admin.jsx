@@ -17,6 +17,7 @@ function Batang({ persen }) {
 
 function Admin() {
   const [dibuka, setDibuka] = useState(false)
+  const [beranda, setBeranda] = useState('kampanye')
   const [partisipasi, setPartisipasi] = useState(null)
   const [hasil, setHasil] = useState([])
   const [pesan, setPesan] = useState('')
@@ -25,9 +26,10 @@ function Admin() {
     setPesan('')
 
     const { data: atur } = await supabase
-      .from('pengaturan').select('voting_dibuka').eq('id', 1).single()
+      .from('pengaturan').select('voting_dibuka, beranda').eq('id', 1).single()
     const statusDibuka = atur ? atur.voting_dibuka : false
     setDibuka(statusDibuka)
+    setBeranda(atur ? atur.beranda : 'kampanye')
 
     const { data: p, error: e1 } = await supabase.rpc('partisipasi')
     if (e1) setPesan(e1.message)
@@ -54,6 +56,20 @@ function Admin() {
 
     const { error } = await supabase.rpc('atur_voting', { p_dibuka: buka })
     if (error) setPesan(error.message)
+    else muatData()
+  }
+
+    async function tetapkan(h) {
+    if (!window.confirm(`Tetapkan ${h.nama_ketua} sebagai pemenang ${h.nama_organisasi}?`)) return
+
+    const { error } = await supabase.rpc('tetapkan_pemenang', { p_kandidat_id: h.kandidat_id })
+    if (error) window.alert(error.message)
+    else window.alert(`${h.nama_ketua} ditetapkan sebagai pemenang ${h.nama_organisasi}. Periode jabatan: 1 tahun mulai hari ini.`)
+  }
+
+  async function ubahBeranda(mode) {
+    const { error } = await supabase.rpc('atur_beranda', { p_mode: mode })
+    if (error) window.alert(error.message)
     else muatData()
   }
 
@@ -101,9 +117,12 @@ function Admin() {
                 {daftar.map((h) => {
                   const persen = totalSuara > 0 ? Math.round((Number(h.jumlah) / totalSuara) * 100) : 0
                   return (
-                    <div key={h.kandidat_id} style={{ marginBottom: '12px' }}>
+                    <div key={h.kandidat_id} style={{ marginBottom: '16px' }}>
                       <p>{h.nomor_urut}. {h.nama_ketua}: <b>{h.jumlah} suara</b> ({persen}%)</p>
                       <Batang persen={persen} />
+                      <button onClick={() => tetapkan(h)} style={{ marginTop: '6px', fontSize: '13px' }}>
+                        Tetapkan Pemenang
+                      </button>
                     </div>
                   )
                 })}
@@ -111,6 +130,15 @@ function Admin() {
             )
           })
         )}
+      </section>
+
+      <section style={gayaKotak}>
+        <h3>Halaman Beranda Publik</h3>
+        <p>Saat ini menampilkan: <b>{beranda === 'proker' ? 'Tracker Proker' : 'Kampanye Kandidat'}</b></p>
+        <button onClick={() => ubahBeranda(beranda === 'proker' ? 'kampanye' : 'proker')}
+          style={{ padding: '10px 20px' }}>
+          {beranda === 'proker' ? 'Ganti ke Kampanye' : 'Ganti ke Tracker Proker'}
+        </button>
       </section>
     </div>
   )

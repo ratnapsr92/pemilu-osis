@@ -109,3 +109,4 @@ function MejaPanitia() {
 }
 
 export default MejaPanitia
+import BeritaAcara from './BeritaAcara'

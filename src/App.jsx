@@ -20,6 +20,7 @@ import TataTertib from './TataTertib'
 import Integritas from './Integritas'
 import LogAktivitas from './LogAktivitas'
 import ResetData from './ResetData'
+import KoreksiMemilih from './KoreksiMemilih'
 import KelolaPemilih from './KelolaPemilih'
 import PersetujuanPemilih from './PersetujuanPemilih'
 import { Navbar, Hero } from './Kepala'
@@ -70,6 +71,7 @@ function HalamanKeamanan() {
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto' }}>
       <h2>Keamanan</h2>
+          <KoreksiMemilih />
       <ResetData onSelesai={() => {}} />
     </div>
   )

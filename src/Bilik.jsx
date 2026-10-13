@@ -79,6 +79,9 @@ function Bilik({ namaBilik, onTerlepas }) {
       <p style={{ fontSize: '22px' }}>
         Halo, <b>{giliran.nama}</b> {giliran.kelas && `(${giliran.kelas})`}
       </p>
+            <p style={{ fontSize: '15px', color: '#b45309', fontWeight: 600 }}>
+        Bukan nama kamu? Jangan memilih, segera panggil petugas.
+      </p>
       <p style={{ fontSize: '18px' }}>Silakan pilih surat suara:</p>
       {organisasi.map((o) => {
         const sudah = giliran.sudah.includes(o.id)

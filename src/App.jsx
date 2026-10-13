@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
 import Login from './Login'
 import MasukBilik from './MasukBilik'
+import MasukSiswa from './MasukSiswa'
+import HalamanMasuk from './HalamanMasuk'
 import Admin from './Admin'
 import Bilik from './Bilik'
 import Beranda from './Beranda'
@@ -13,12 +15,14 @@ import KelolaKandidat from './KelolaKandidat'
 import KelolaBilik from './KelolaBilik'
 import MejaBilik from './MejaBilik'
 import PetugasBilik from './PetugasBilik'
+import ModerasiKomentar from './ModerasiKomentar'
 import TataTertib from './TataTertib'
 import Integritas from './Integritas'
 import LogAktivitas from './LogAktivitas'
 import ResetData from './ResetData'
+import KelolaPemilih from './KelolaPemilih'
+import PersetujuanPemilih from './PersetujuanPemilih'
 import { Navbar, Hero } from './Kepala'
-
 const daftarHero = {
   proker: {
     label: 'Transparansi Program Kerja',
@@ -35,13 +39,16 @@ const daftarHero = {
 const menuAdmin = [
   { id: 'pemilu', label: 'Pemilu' },
   { id: 'kandidat', label: 'Kandidat' },
+  { id: 'pemilih', label: 'Pemilih' },
   { id: 'bilik', label: 'Bilik' },
   { id: 'proker', label: 'Proker' },
+  { id: 'komentar', label: 'Komentar' },
   { id: 'log', label: 'Log' },
 ]
 
 const menuKpu = [
   { id: 'pengawasan', label: 'Pengawasan' },
+  { id: 'persetujuan', label: 'Persetujuan' },
   { id: 'keamanan', label: 'Keamanan' },
 ]
 
@@ -69,7 +76,7 @@ function HalamanKeamanan() {
 }
 function App() {
   const [session, setSession] = useState(null)
-  const [akun, setAkun] = useState({ profil: null, bilik: null })
+  const [akun, setAkun] = useState({ profil: null, bilik: null, siswa: null })
   const [ulang, setUlang] = useState(0)
   const [beranda, setBeranda] = useState('kampanye')
   const [hasilDiumumkan, setHasilDiumumkan] = useState(false)
@@ -96,27 +103,38 @@ function App() {
       })
   }, [])
 
+  // Kenali jenis akun: admin/KPU/pengurus/petugas (profil), tablet bilik, atau siswa
   useEffect(() => {
     if (!session) {
-      setAkun({ profil: null, bilik: null })
+      setAkun({ profil: null, bilik: null, siswa: null })
       return
     }
     let batal = false
     async function muat() {
       const { data: p } = await supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle()
       if (p) {
-        if (!batal) setAkun({ profil: p, bilik: null })
+        if (!batal) setAkun({ profil: p, bilik: null, siswa: null })
         return
       }
       const { data: b } = await supabase.rpc('giliran_saya')
-      if (!batal) setAkun({ profil: null, bilik: b && b.length > 0 ? b[0].nama_bilik : null })
+      if (b && b.length > 0) {
+        if (!batal) setAkun({ profil: null, bilik: b[0].nama_bilik, siswa: null })
+        return
+      }
+      const { data: s } = await supabase.rpc('info_siswa')
+      if (!batal) setAkun({ profil: null, bilik: null, siswa: s && s.length > 0 ? s[0] : null })
     }
     muat()
     return () => { batal = true }
   }, [session, ulang])
-
-  function keluar() {
+    function keluar() {
     supabase.auth.signOut()
+    setHalaman(null)
+  }
+
+  async function keluarSiswa() {
+    await supabase.rpc('keluar_siswa')
+    await supabase.auth.signOut()
     setHalaman(null)
   }
 
@@ -141,7 +159,7 @@ function App() {
     )
   }
 
-    // Petugas bilik (admin OSIS)
+  // Petugas bilik (admin OSIS)
   if (session && profil?.peran === 'petugas') {
     return (
       <>
@@ -154,8 +172,7 @@ function App() {
       </>
     )
   }
-  
-  // Ketua KPU
+    // Ketua KPU
   if (session && profil?.peran === 'kpu') {
     if (!profil.tatib_disetujui_pada) {
       return (
@@ -179,6 +196,7 @@ function App() {
               <LogAktivitas />
             </div>
           )}
+          {halamanKpu === 'persetujuan' && <PersetujuanPemilih />}
           {halamanKpu === 'keamanan' && <HalamanKeamanan />}
         </main>
         <Kaki />
@@ -186,7 +204,7 @@ function App() {
     )
   }
 
-  // Admin
+  // Admin guru
   if (session && profil?.peran === 'admin') {
     return (
       <>
@@ -195,9 +213,11 @@ function App() {
           <p className="sapaan">Halo, <b>{profil.nama}</b></p>
           {halamanAdmin === 'pemilu' && <Admin />}
           {halamanAdmin === 'kandidat' && <KelolaKandidat />}
+          {halamanAdmin === 'pemilih' && <KelolaPemilih />}
           {halamanAdmin === 'bilik' && <KelolaBilik />}
           {halamanAdmin === 'bilik' && <PetugasBilik />}
           {halamanAdmin === 'proker' && <KelolaProker />}
+          {halamanAdmin === 'komentar' && <ModerasiKomentar />}
           {halamanAdmin === 'log' && <LogAktivitas />}
         </main>
         <Kaki />
@@ -218,38 +238,40 @@ function App() {
       </>
     )
   }
-
-  // Pengunjung umum
+    // Pengunjung umum & siswa yang sudah login
+  const siswa = akun.siswa
   const menuPublik = [
     { id: 'kampanye', label: 'Beranda' },
     ...(hasilDiumumkan ? [{ id: 'hasil', label: 'Hasil' }] : []),
     { id: 'proker', label: 'Proker' },
-    { id: 'masuk', label: 'Masuk' },
+    ...(siswa ? [] : [{ id: 'masuk', label: 'Masuk' }]),
   ]
   const aktif = halaman ?? beranda
   const menuAktif = aktif === 'organisasi' ? 'kampanye' : aktif
+  const kananSiswa = siswa ? (
+    <>
+      <span className="sapaan-nav">Hai, {siswa.nama.split(' ')[0]}</span>
+      <button className="tombol-kedua" onClick={keluarSiswa}>Keluar</button>
+    </>
+  ) : null
 
   return (
     <>
-      <Navbar menu={menuPublik} aktif={menuAktif} onPilih={setHalaman} />
+      <Navbar menu={menuPublik} aktif={menuAktif} onPilih={setHalaman} kanan={kananSiswa} />
       <main className="wadah">
-        {aktif === 'masuk' && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', justifyContent: 'center', paddingTop: '16px' }}>
-            <div style={{ flex: '1 1 300px', maxWidth: '380px' }}>
-              <Login />
-            </div>
-            <div style={{ flex: '1 1 300px', maxWidth: '380px' }}>
-              <MasukBilik onBerhasil={() => setUlang((u) => u + 1)} />
-            </div>
-          </div>
+        {aktif === 'masuk' && !siswa && (
+          <HalamanMasuk
+            onSiswaBerhasil={() => { setUlang((u) => u + 1); setHalaman(null) }}
+            onBilikBerhasil={() => setUlang((u) => u + 1)}
+          />
         )}
+          
 
-        {aktif === 'kampanye' && (
-          <Beranda onDetail={bukaDetail} onHasil={() => setHalaman('hasil')} />
-        )}
+        {aktif === 'kampanye' && <Beranda onDetail={bukaDetail} onHasil={() => setHalaman('hasil')} />}
 
         {aktif === 'organisasi' && orgDetail && (
-          <DetailOrganisasi key={orgDetail.id} org={orgDetail} onKembali={() => setHalaman('kampanye')} />
+          <DetailOrganisasi key={orgDetail.id} org={orgDetail} siswa={siswa}
+            onMasuk={() => setHalaman('masuk')} onKembali={() => setHalaman('kampanye')} />
         )}
 
         {aktif === 'hasil' && (

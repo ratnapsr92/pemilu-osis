@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
+import DukunganKomentar from './DukunganKomentar'
 
 // Ubah link YouTube biasa menjadi link yang bisa ditampilkan
 function linkEmbed(url) {
@@ -8,7 +9,7 @@ function linkEmbed(url) {
   return cocok ? `https://www.youtube.com/embed/${cocok[1]}` : null
 }
 
-function ProfilPaslon({ k, org, onKembali }) {
+   function ProfilPaslon({ k, org, siswa, onMasuk, onKembali }) {
   const [media, setMedia] = useState([])
 
   useEffect(() => {
@@ -102,6 +103,7 @@ function ProfilPaslon({ k, org, onKembali }) {
           })}
         </section>
       )}
+             <DukunganKomentar k={k} siswa={siswa} onMasuk={onMasuk} />
     </div>
   )
 }

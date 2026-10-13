@@ -705,3 +705,14 @@ input:focus, select:focus, textarea:focus {
   text-align: center;
   margin: 4px 0 0;
 }
+/* Sapaan siswa di navbar */
+.sapaan-nav {
+  font-size: 14px;
+  color: var(--teks-redup);
+  margin: 0 4px 0 8px;
+}
+@media (max-width: 480px) {
+  .sapaan-nav {
+    display: none;
+  }
+}

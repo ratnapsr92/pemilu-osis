@@ -12,7 +12,7 @@ function acak(daftar) {
   return hasil
 }
 
-function DetailOrganisasi({ org, onKembali }) {
+function DetailOrganisasi({ org, siswa, onMasuk, onKembali }) {
   const [paslon, setPaslon] = useState([])
   const [dimuat, setDimuat] = useState(false)
   const [dipilih, setDipilih] = useState(null)
@@ -32,7 +32,7 @@ function DetailOrganisasi({ org, onKembali }) {
 
   if (dipilih) {
     return (
-      <ProfilPaslon k={dipilih} org={org}
+      <ProfilPaslon k={dipilih} org={org} siswa={siswa} onMasuk={onMasuk}
         onKembali={() => { setDipilih(null); window.scrollTo(0, 0) }} />
     )
   }

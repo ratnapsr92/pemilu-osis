@@ -3,7 +3,7 @@ import { supabase } from './supabase'
 import MejaPanitia from './MejaPanitia'
 import BeritaAcara from './BeritaAcara'
 import PengumumanHasil from './PengumumanHasil'
-import ResetData from './ResetData'
+import Integritas from './Integritas'
 import JadwalPemilu from './JadwalPemilu'
 
 const gayaKotak = {
@@ -126,6 +126,7 @@ function Admin() {
         </button>
       </section>
 
+      <Integritas />
       <JadwalPemilu />
       {dibuka && <MejaPanitia />}
 
@@ -170,7 +171,6 @@ function Admin() {
 
       {!dibuka && <PengumumanHasil />}
       {!dibuka && <BeritaAcara />}
-      {!dibuka && <ResetData onSelesai={muatData} />}
 
       <section style={gayaKotak}>
         <h3>Halaman Beranda Publik</h3>

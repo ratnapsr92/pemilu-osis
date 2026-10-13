@@ -20,7 +20,7 @@ function Login() {
     setPesan('')
 
     const { error } = await supabase.auth.signInWithPassword({
-        email: nis.trim().split('@')[0] + DOMAIN,
+        email: nis.includes('@') ? nis.trim() : nis.trim() + DOMAIN,
       password: password,
     })
 

@@ -11,6 +11,12 @@ import Hasil from './Hasil'
 import KelolaProker from './KelolaProker'
 import KelolaKandidat from './KelolaKandidat'
 import KelolaBilik from './KelolaBilik'
+import MejaBilik from './MejaBilik'
+import PetugasBilik from './PetugasBilik'
+import TataTertib from './TataTertib'
+import Integritas from './Integritas'
+import LogAktivitas from './LogAktivitas'
+import ResetData from './ResetData'
 import { Navbar, Hero } from './Kepala'
 
 const daftarHero = {
@@ -31,6 +37,12 @@ const menuAdmin = [
   { id: 'kandidat', label: 'Kandidat' },
   { id: 'bilik', label: 'Bilik' },
   { id: 'proker', label: 'Proker' },
+  { id: 'log', label: 'Log' },
+]
+
+const menuKpu = [
+  { id: 'pengawasan', label: 'Pengawasan' },
+  { id: 'keamanan', label: 'Keamanan' },
 ]
 
 function Kaki() {
@@ -42,6 +54,19 @@ function Kaki() {
     </footer>
   )
 }
+
+// Menu Keamanan Ketua KPU (setiap kali dibuka, tercatat di log)
+function HalamanKeamanan() {
+  useEffect(() => {
+    supabase.rpc('catat_akses_keamanan').then(() => {})
+  }, [])
+  return (
+    <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+      <h2>Keamanan</h2>
+      <ResetData onSelesai={() => {}} />
+    </div>
+  )
+}
 function App() {
   const [session, setSession] = useState(null)
   const [akun, setAkun] = useState({ profil: null, bilik: null })
@@ -51,6 +76,7 @@ function App() {
   const [halaman, setHalaman] = useState(null)
   const [orgDetail, setOrgDetail] = useState(null)
   const [halamanAdmin, setHalamanAdmin] = useState('pemilu')
+  const [halamanKpu, setHalamanKpu] = useState('pengawasan')
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session))
@@ -115,6 +141,51 @@ function App() {
     )
   }
 
+    // Petugas bilik (admin OSIS)
+  if (session && profil?.peran === 'petugas') {
+    return (
+      <>
+        <Navbar kanan={tombolKeluar} />
+        <main className="wadah" style={{ paddingTop: '24px' }}>
+          <p className="sapaan">Halo, <b>{profil.nama}</b> · Petugas Bilik</p>
+          <MejaBilik />
+        </main>
+        <Kaki />
+      </>
+    )
+  }
+  
+  // Ketua KPU
+  if (session && profil?.peran === 'kpu') {
+    if (!profil.tatib_disetujui_pada) {
+      return (
+        <>
+          <Navbar kanan={tombolKeluar} />
+          <main className="wadah" style={{ paddingTop: '24px' }}>
+            <TataTertib nama={profil.nama} onSelesai={() => setUlang((u) => u + 1)} />
+          </main>
+          <Kaki />
+        </>
+      )
+    }
+    return (
+      <>
+        <Navbar menu={menuKpu} aktif={halamanKpu} onPilih={setHalamanKpu} kanan={tombolKeluar} />
+        <main className="wadah" style={{ paddingTop: '24px' }}>
+          <p className="sapaan">Halo, <b>{profil.nama}</b> · Ketua KPU</p>
+          {halamanKpu === 'pengawasan' && (
+            <div style={{ maxWidth: '760px', margin: '0 auto' }}>
+              <Integritas />
+              <LogAktivitas />
+            </div>
+          )}
+          {halamanKpu === 'keamanan' && <HalamanKeamanan />}
+        </main>
+        <Kaki />
+      </>
+    )
+  }
+
   // Admin
   if (session && profil?.peran === 'admin') {
     return (
@@ -125,7 +196,9 @@ function App() {
           {halamanAdmin === 'pemilu' && <Admin />}
           {halamanAdmin === 'kandidat' && <KelolaKandidat />}
           {halamanAdmin === 'bilik' && <KelolaBilik />}
+          {halamanAdmin === 'bilik' && <PetugasBilik />}
           {halamanAdmin === 'proker' && <KelolaProker />}
+          {halamanAdmin === 'log' && <LogAktivitas />}
         </main>
         <Kaki />
       </>

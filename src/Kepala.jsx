@@ -19,7 +19,7 @@ export const daftarLogo = [
   { src: '/logo/osis.png', alt: 'Logo OSIS' },
   { src: '/logo/dewan.png', alt: 'Logo Dewan' },
 ]
-// Bilah navigasi atas
+// Bilah navigasi atas (dengan logo instansi kecil)
 export function Navbar({ menu = [], aktif, onPilih, kanan }) {
   return (
     <nav className="navbar">
@@ -27,6 +27,12 @@ export function Navbar({ menu = [], aktif, onPilih, kanan }) {
         <div className="navbar-merek">
           <LogoPilang />
           <span>PILANG</span>
+          <div className="navbar-logo">
+            {daftarLogo.map((logo) => (
+              <img key={logo.src} src={logo.src} alt={logo.alt}
+                onError={(e) => { e.currentTarget.style.display = 'none' }} />
+            ))}
+          </div>
         </div>
         <div className="navbar-menu">
           {menu.map((m) => (

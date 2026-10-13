@@ -716,3 +716,22 @@ input:focus, select:focus, textarea:focus {
     display: none;
   }
 }
+/* Logo instansi kecil di navbar */
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 6px;
+  padding-left: 10px;
+  border-left: 1px solid var(--garis);
+}
+.navbar-logo img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+@media (max-width: 900px) {
+  .navbar-logo {
+    display: none;
+  }
+}

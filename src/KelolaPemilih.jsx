@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
 import KodeSiswa from './KodeSiswa'
+import ImporPemilihExcel from './ImporPemilihExcel'
 
 const gayaKotak = {
   border: '1px solid #ddd', borderRadius: '12px', padding: '16px', marginBottom: '16px', background: '#fff'
@@ -95,6 +96,7 @@ function KelolaPemilih() {
       {!dibuka && !form && <button onClick={() => setForm({ jenis: 'tambah' })} style={{ marginBottom: '16px' }}>+ Usulkan Pemilih Baru</button>}
       {form && <FormUsulan key={form.pemilih?.id ?? 'baru'} jenis={form.jenis} pemilih={form.pemilih}
         onSelesai={() => { setForm(null); muatUsulan() }} onBatal={() => setForm(null)} />}
+      {!dibuka && !form && <ImporPemilihExcel onSelesai={muatUsulan} />}
 
       {usulan.length > 0 && (
         <section style={gayaKotak}>

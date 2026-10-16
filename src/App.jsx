@@ -16,6 +16,7 @@ import KelolaBilik from './KelolaBilik'
 import MejaBilik from './MejaBilik'
 import PetugasBilik from './PetugasBilik'
 import ModerasiKomentar from './ModerasiKomentar'
+import ModerasiSaranProker from './ModerasiSaranProker'
 import TataTertib from './TataTertib'
 import Integritas from './Integritas'
 import LogAktivitas from './LogAktivitas'
@@ -220,6 +221,7 @@ function App() {
           {halamanAdmin === 'bilik' && <PetugasBilik />}
           {halamanAdmin === 'proker' && <KelolaProker />}
           {halamanAdmin === 'komentar' && <ModerasiKomentar />}
+                    {halamanAdmin === 'komentar' && <ModerasiSaranProker />}
           {halamanAdmin === 'log' && <LogAktivitas />}
         </main>
         <Kaki />
@@ -286,7 +288,7 @@ function App() {
         {aktif === 'proker' && (
           <>
             <Hero {...daftarHero.proker} />
-            <Proker />
+            <Proker siswa={siswa} onMasuk={() => setHalaman('masuk')} />
           </>
         )}
       </main>

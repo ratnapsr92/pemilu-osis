@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
 import DukunganKomentar from './DukunganKomentar'
+import { jabatan } from './jabatan'
 
 // Ubah link YouTube biasa menjadi link yang bisa ditampilkan
 function linkEmbed(url) {
@@ -11,6 +12,7 @@ function linkEmbed(url) {
 
    function ProfilPaslon({ k, org, siswa, onMasuk, onKembali }) {
   const [media, setMedia] = useState([])
+  const j = jabatan(org.nama)
 
   useEffect(() => {
     supabase.from('kampanye_media').select('*')
@@ -44,12 +46,12 @@ function linkEmbed(url) {
         <div className="profil-isi">
           <div className="kecil">CALON {org.nama.toUpperCase()} · NOMOR URUT {k.nomor_urut}</div>
           <h2>{k.nama_ketua}</h2>
-          <p className="redup">Calon Ketua{k.kelas_ketua && ` · Kelas ${k.kelas_ketua}`}</p>
+          <p className="redup">Calon {j.ketua}{k.kelas_ketua && ` · Kelas ${k.kelas_ketua}`}</p>
           {k.nama_wakil && (
             <p className="redup" style={{ marginTop: '10px' }}>
               <b style={{ color: 'var(--teks)' }}>{k.nama_wakil}</b>
               <br />
-              Calon Wakil{k.kelas_wakil && ` · Kelas ${k.kelas_wakil}`}
+              Calon {j.wakil}{k.kelas_wakil && ` · Kelas ${k.kelas_wakil}`}
             </p>
           )}
         </div>

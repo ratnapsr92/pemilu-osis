@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
+import UmpanBalikProker from './UmpanBalikProker'
+import { jabatan } from './jabatan'
 
 const warnaStatus = {
   'belum mulai': '#9ca3af',
@@ -26,13 +28,34 @@ function formatTanggal(t) {
   return new Date(t).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-function Proker() {
+function Proker({ siswa, onMasuk }) {
   const [organisasi, setOrganisasi] = useState([])
   const [aktif, setAktif] = useState(null)
   const [kepengurusan, setKepengurusan] = useState([])
   const [terbuka, setTerbuka] = useState(null)
+  const [tampil, setTampil] = useState(null)
+    const [ringkasan, setRingkasan] = useState({})
+  const [saranPublik, setSaranPublik] = useState([])
+  const [saranSaya, setSaranSaya] = useState([])
+
+  async function muatUmpan() {
+    const { data: r } = await supabase.rpc('ringkasan_proker')
+    setRingkasan(Object.fromEntries((r || []).map((x) => [x.proker_id, x])))
+    const { data: sp } = await supabase.rpc('saran_proker_publik')
+    setSaranPublik(sp || [])
+    if (siswa) {
+      const { data: ss } = await supabase.rpc('saran_proker_saya')
+      setSaranSaya(ss || [])
+    } else setSaranSaya([])
+  }
 
   useEffect(() => {
+    muatUmpan()
+  }, [siswa])
+
+  useEffect(() => {
+        supabase.from('pengaturan').select('proker_ditampilkan').eq('id', 1).single()
+      .then(({ data }) => setTampil(data ? data.proker_ditampilkan : false))
     supabase.from('organisasi').select('*').order('urutan')
       .then(({ data }) => {
         if (data && data.length > 0) {
@@ -44,7 +67,7 @@ function Proker() {
     // Ambil kepengurusan + data ketua + proker + riwayatnya sekaligus
     supabase.from('kepengurusan')
       .select('*, kandidat(*), proker(*, proker_update(*))')
-      .order('mulai', { ascending: false })
+      .order('id', { ascending: false })
       .then(({ data }) => {
         if (data) setKepengurusan(data)
       })
@@ -52,6 +75,7 @@ function Proker() {
 
   // Kepengurusan terbaru untuk organisasi yang sedang dipilih
   const kp = kepengurusan.find((k) => k.organisasi_id === aktif)
+    const j = jabatan(organisasi.find((o) => o.id === aktif)?.nama)
   const daftar = kp ? [...kp.proker].sort((a, b) => a.urutan - b.urutan || a.id - b.id) : []
   const dihitung = daftar.filter((p) => p.status !== 'batal')
   const jumlahSelesai = daftar.filter((p) => p.status === 'selesai').length
@@ -59,7 +83,20 @@ function Proker() {
     ? Math.round(dihitung.reduce((j, p) => j + p.progres, 0) / dihitung.length)
     : 0
 
-  return (
+    if (tampil === null) return <p>Memuat...</p>
+  if (!tampil) {
+    return (
+      <div className="kartu" style={{ maxWidth: '520px', margin: '24px auto', padding: '28px 20px', textAlign: 'center' }}>
+        <div style={{ fontSize: '40px' }}>📋</div>
+        <h2 style={{ margin: '8px 0' }}>Program Kerja</h2>
+        <p style={{ color: 'var(--teks-redup)' }}>
+          Program kerja pengurus baru belum dipublikasikan. Halaman ini akan terisi setelah
+          proker disusun dan dibuka oleh panitia.
+        </p>
+      </div>
+    )
+  }
+    return (
     <div style={{ maxWidth: '640px', margin: '0 auto' }}>
       <h2>Tracker Program Kerja</h2>
 
@@ -90,7 +127,7 @@ function Proker() {
             )}
             <div>
               <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{kp.kandidat.nama_ketua}</div>
-              {kp.kandidat.nama_wakil && <div>Wakil: {kp.kandidat.nama_wakil}</div>}
+              {kp.kandidat.nama_wakil && <div>{j.wakil}: {kp.kandidat.nama_wakil}</div>}
               <div style={{ color: '#666', fontSize: '14px' }}>
                 Periode {formatTanggal(kp.mulai)} – {formatTanggal(kp.selesai)}
               </div>
@@ -129,6 +166,11 @@ function Proker() {
                   Target: {formatTanggal(p.target)} · Progres {p.progres}%
                 </p>
                 <Batang persen={p.progres} warna={warnaStatus[p.status]} />
+
+                <UmpanBalikProker prokerId={p.id} ringkasan={ringkasan[p.id]}
+                  saranPublik={saranPublik.filter((s) => s.proker_id === p.id)}
+                  saranSaya={saranSaya.filter((s) => s.proker_id === p.id)}
+                  siswa={siswa} onMasuk={onMasuk} onBerubah={muatUmpan} />
 
                 {riwayat.length > 0 && (
                   <button onClick={() => setTerbuka(terbuka === p.id ? null : p.id)}

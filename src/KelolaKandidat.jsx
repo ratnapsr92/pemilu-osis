@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
 import KelolaMedia from './KelolaMedia'
+import { jabatan } from './jabatan'
 
 const gayaKotak = {
   border: '1px solid #ddd', borderRadius: '12px', padding: '16px', marginBottom: '16px', background: '#fff'
@@ -25,13 +26,13 @@ async function kecilkanFoto(file, maks = 1000) {
   return new Promise((selesai) => kanvas.toBlob(selesai, 'image/jpeg', 0.85))
 }
 // Form tambah / ubah kandidat
-function FormKandidat({ awal, organisasiId, onSelesai, onBatal }) {
+function FormKandidat({ awal, organisasiId, namaOrg, onSelesai, onBatal }) {
   const [isi, setIsi] = useState(awal)
   const [foto, setFoto] = useState(null)
   const [pratinjau, setPratinjau] = useState(awal.foto_url || '')
   const [loading, setLoading] = useState(false)
   const [pesan, setPesan] = useState('')
-  const baru = !awal.id
+  const baru = !awal.id; const j = jabatan(namaOrg)
 
   function ubah(kolom) {
     return (e) => setIsi({ ...isi, [kolom]: e.target.value })
@@ -102,13 +103,13 @@ function FormKandidat({ awal, organisasiId, onSelesai, onBatal }) {
 
       <label>Nomor urut</label>
       <input type="number" min="1" required value={isi.nomor_urut} onChange={ubah('nomor_urut')} style={gayaInput} />
-      <label>Nama ketua</label>
+      <label>Nama {j.ketua}</label>
       <input required value={isi.nama_ketua} onChange={ubah('nama_ketua')} style={gayaInput} />
-      <label>Kelas ketua</label>
+      <label>Kelas {j.ketua}</label>
       <input value={isi.kelas_ketua || ''} onChange={ubah('kelas_ketua')} placeholder="Contoh: 8A" style={gayaInput} />
-      <label>Nama wakil (kosongkan jika perorangan)</label>
+      <label>Kelas<label>Nama {j.wakil} (kosongkan jika perorangan)</label> {j.ketua}</label>
       <input value={isi.nama_wakil || ''} onChange={ubah('nama_wakil')} style={gayaInput} />
-      <label>Kelas wakil</label>
+      <label>Kelas {j.wakil}</label>
       <input value={isi.kelas_wakil || ''} onChange={ubah('kelas_wakil')} placeholder="Contoh: 7B" style={gayaInput} />
       <label>Visi</label>
       <textarea rows={3} value={isi.visi || ''} onChange={ubah('visi')} style={gayaInput} />
@@ -167,6 +168,8 @@ function KelolaKandidat() {
   }
 
   const daftar = kandidat.filter((k) => k.organisasi_id === orgAktif)
+  const namaAktif = organisasi.find((o) => o.id === orgAktif)?.nama
+  const j = jabatan(namaAktif)
   const nomorBerikut = daftar.length > 0 ? Math.max(...daftar.map((k) => k.nomor_urut)) + 1 : 1
 
   return (
@@ -198,7 +201,7 @@ function KelolaKandidat() {
         <FormKandidat
           key={form === 'baru' ? 'baru' : form.id}
           awal={form === 'baru' ? { ...kosong, nomor_urut: nomorBerikut } : form}
-          organisasiId={orgAktif}
+          organisasiId={orgAktif} namaOrg={namaAktif}
           onSelesai={() => { setForm(null); muat() }}
           onBatal={() => setForm(null)}
         />
@@ -217,7 +220,7 @@ function KelolaKandidat() {
               <b>{k.nomor_urut}. {k.nama_ketua}</b>{k.kelas_ketua && ` (${k.kelas_ketua})`}
               {k.nama_wakil && (
                 <div style={{ fontSize: '14px', color: '#666' }}>
-                  Wakil: {k.nama_wakil}{k.kelas_wakil && ` (${k.kelas_wakil})`}
+                  {j.wakil}: {k.nama_wakil}{k.kelas_wakil && ` (${k.kelas_wakil})`}
                 </div>
               )}
             </div>

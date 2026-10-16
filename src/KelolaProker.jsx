@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
+import SakelarProker from './SakelarProker'
 
 const gayaKotak = {
   border: '1px solid #ddd', borderRadius: '12px', padding: '16px', marginBottom: '16px', background: '#fff'
@@ -135,7 +136,7 @@ function KelolaProker({ organisasiId }) {
     const { data, error } = await supabase.from('kepengurusan')
       .select('*, kandidat(nama_ketua), proker(*)')
       .eq('organisasi_id', orgAktif)
-      .order('mulai', { ascending: false })
+      .order('id', { ascending: false })
       .limit(1)
     if (error) setPesan(error.message)
     else setKp(data.length > 0 ? data[0] : null)
@@ -177,6 +178,7 @@ function KelolaProker({ organisasiId }) {
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'left' }}>
       <h2 style={{ textAlign: 'center' }}>Kelola Program Kerja</h2>
+      {!organisasiId && <SakelarProker />}
 
       {/* Tab organisasi (khusus admin) */}
       {!organisasiId && (

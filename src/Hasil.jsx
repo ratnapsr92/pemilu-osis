@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
+import { jabatan } from './jabatan'
 
 function Hasil() {
   const [baris, setBaris] = useState([])
@@ -68,7 +69,7 @@ function Hasil() {
                       <b>{k.jumlah} suara ({persen}%)</b>
                     </div>
                     {k.nama_wakil && (
-                      <div style={{ fontSize: '14px', color: 'var(--teks-redup)' }}>Wakil: {k.nama_wakil}</div>
+                      <div style={{ fontSize: '14px', color: 'var(--teks-redup)' }}>{jabatan(g.nama).wakil}: {k.nama_wakil}</div>
                     )}
                     <div style={{ background: '#e5e7eb', borderRadius: '8px', height: '12px', marginTop: '8px' }}>
                       <div style={{

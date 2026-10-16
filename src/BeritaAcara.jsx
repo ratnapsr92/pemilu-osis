@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
+import { jabatan } from './jabatan'
 
 const NAMA_SEKOLAH = 'UPT SMP Negeri 2 Semanding'
 const HARI = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
@@ -39,10 +40,11 @@ function buatHtml({ org, rekap, hasil, pemenang, isian }) {
   const saksi = isian.saksi.split('\n').map((s) => s.trim()).filter(Boolean)
   const judulOrg = org.nama.toUpperCase()
   const sekolahBesar = NAMA_SEKOLAH.toUpperCase()
+  const j = jabatan(org.nama)
 
   const barisSuara = hasil.map((h) => {
     const persen = totalSuara > 0 ? ((Number(h.jumlah) / totalSuara) * 100).toFixed(1) : '0'
-    const wakil = h.nama_wakil ? `<br><small>Wakil: ${aman(h.nama_wakil)}</small>` : ''
+    const wakil = h.nama_wakil ? `<br><small>${j.wakil}: ${aman(h.nama_wakil)}</small>` : ''
     return `<tr><td class="tengah">${h.nomor_urut}</td><td>${aman(h.nama_ketua)}${wakil}</td>
       <td class="tengah">${h.jumlah}</td><td class="tengah">${persen}%</td></tr>`
   }).join('')
@@ -52,7 +54,7 @@ function buatHtml({ org, rekap, hasil, pemenang, isian }) {
     <td style="padding-left:${i % 2 === 0 ? 0 : 80}px">${i + 1}. ..............................</td></tr>`).join('')
 
   const teksPemenang = pemenang
-    ? `Berdasarkan hasil perolehan suara tersebut, <b>${aman(pemenang.nama_ketua)}</b>${pemenang.nama_wakil ? ` dan <b>${aman(pemenang.nama_wakil)}</b>` : ''} (nomor urut ${pemenang.nomor_urut}) ditetapkan sebagai Ketua${pemenang.nama_wakil ? ' dan Wakil Ketua' : ''} ${aman(org.nama)} ${NAMA_SEKOLAH} masa bakti ${aman(isian.tahunPelajaran)}.`
+    ? `Berdasarkan hasil perolehan suara tersebut, <b>${aman(pemenang.nama_ketua)}</b>${pemenang.nama_wakil ? ` dan <b>${aman(pemenang.nama_wakil)}</b>` : ''} (nomor urut ${pemenang.nomor_urut}) ditetapkan sebagai ${j.ketua}${pemenang.nama_wakil ? ' dan ' + j.wakil : ''} ${aman(org.nama)} ${NAMA_SEKOLAH} masa bakti ${aman(isian.tahunPelajaran)}.`
     : 'Pemenang belum dapat ditetapkan karena terdapat perolehan suara yang sama.'
 
   return `<!doctype html><html lang="id"><head><meta charset="utf-8">
@@ -87,11 +89,11 @@ function buatHtml({ org, rekap, hasil, pemenang, isian }) {
   ${org.logo ? `<img src="${asal}${org.logo}" alt="">` : '<span style="width:80px"></span>'}
 </div>
 
-<h1>BERITA ACARA<br>PEMILIHAN KETUA ${judulOrg}<br>${sekolahBesar}<br>TAHUN PELAJARAN ${aman(isian.tahunPelajaran)}</h1>
+<h1>BERITA ACARA<br>PEMILIHAN ${j.judul.toUpperCase()} ${judulOrg}<br>${sekolahBesar}<br>TAHUN PELAJARAN ${aman(isian.tahunPelajaran)}</h1>
 
 <p>Pada hari ini <b>${HARI[tgl.getDay()]}</b> tanggal <b>${terbilang(d)}</b> bulan <b>${BULAN[m - 1]}</b>
 tahun <b>${terbilang(y)}</b> (${String(d).padStart(2, '0')}-${String(m).padStart(2, '0')}-${y}),
-bertempat di ${aman(isian.tempat)}, telah dilaksanakan Pemilihan Ketua ${aman(org.nama)} ${NAMA_SEKOLAH}
+bertempat di ${aman(isian.tempat)}, telah dilaksanakan Pemilihan ${j.judul} ${aman(org.nama)} ${NAMA_SEKOLAH}
 Tahun Pelajaran ${aman(isian.tahunPelajaran)} secara langsung, umum, bebas, dan rahasia menggunakan
 bilik suara digital melalui aplikasi PILANG (Pilihan Langsung), dengan hasil sebagai berikut:</p>
 
@@ -143,6 +145,10 @@ function BeritaAcara() {
   })
 
   useEffect(() => {
+    supabase.from('pengaturan').select('tahun_pelajaran').eq('id', 1).single()
+      .then(({ data }) => {
+        if (data?.tahun_pelajaran) setIsian((lama) => ({ ...lama, tahunPelajaran: data.tahun_pelajaran }))
+      })
     supabase.from('organisasi').select('id, nama, logo').order('urutan')
       .then(({ data }) => {
         if (data) setOrganisasi(data)
@@ -173,7 +179,7 @@ function BeritaAcara() {
       .select('id, nama_wakil').eq('organisasi_id', org.id)
     const { data: kp } = await supabase.from('kepengurusan')
       .select('kandidat_id').eq('organisasi_id', org.id)
-      .order('mulai', { ascending: false }).limit(1)
+      .order('id', { ascending: false }).limit(1)
 
     const r = rekap.find((x) => x.organisasi_id === org.id)
     const hasil = hasilSemua

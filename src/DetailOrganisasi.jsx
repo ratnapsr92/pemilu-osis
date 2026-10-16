@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
 import ProfilPaslon from './ProfilPaslon'
+import { jabatan } from './jabatan'
 
 // Acak urutan paslon supaya adil (tidak ada yang selalu tampil pertama)
 function acak(daftar) {
@@ -16,6 +17,7 @@ function DetailOrganisasi({ org, siswa, onMasuk, onKembali }) {
   const [paslon, setPaslon] = useState([])
   const [dimuat, setDimuat] = useState(false)
   const [dipilih, setDipilih] = useState(null)
+  const j = jabatan(org.nama)
 
   useEffect(() => {
     supabase.from('kandidat').select('*').eq('organisasi_id', org.id)
@@ -65,10 +67,10 @@ function DetailOrganisasi({ org, siswa, onMasuk, onKembali }) {
             </div>
             <div className="isi">
               <h3>{k.nama_ketua}</h3>
-              {k.kelas_ketua && <p className="wakil">Calon Ketua · Kelas {k.kelas_ketua}</p>}
+              {k.kelas_ketua && <p className="wakil">Calon {j.ketua} · Kelas {k.kelas_ketua}</p>}
               {k.nama_wakil && (
                 <p className="wakil">
-                  Wakil: {k.nama_wakil}{k.kelas_wakil && ` · Kelas ${k.kelas_wakil}`}
+                  {j.wakil}: {k.nama_wakil}{k.kelas_wakil && ` · Kelas ${k.kelas_wakil}`}
                 </p>
               )}
               <button onClick={() => bukaProfil(k)} style={{ width: '100%', marginTop: '8px' }}>

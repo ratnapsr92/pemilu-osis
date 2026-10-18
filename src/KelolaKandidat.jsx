@@ -12,7 +12,7 @@ const gayaInput = {
 }
 const kosong = {
   nomor_urut: '', nama_ketua: '', kelas_ketua: '', nama_wakil: '', kelas_wakil: '',
-  visi: '', misi: '', video_url: '', foto_url: ''
+  visi: '', misi: '', program_kerja: '', video_url: '', foto_url: ''
 }
 
 // Kecilkan foto (maks 1000 px) supaya ringan
@@ -73,7 +73,7 @@ function FormKandidat({ awal, organisasiId, namaOrg, onSelesai, onBatal }) {
       nama_wakil: bersih(isi.nama_wakil),
       kelas_wakil: bersih(isi.kelas_wakil),
       visi: bersih(isi.visi),
-      misi: bersih(isi.misi),
+      misi: bersih(isi.misi), program_kerja: bersih(isi.program_kerja),
       video_url: bersih(isi.video_url),
       foto_url: fotoUrl,
     }
@@ -115,6 +115,9 @@ function FormKandidat({ awal, organisasiId, namaOrg, onSelesai, onBatal }) {
       <textarea rows={3} value={isi.visi || ''} onChange={ubah('visi')} style={gayaInput} />
       <label>Misi (satu poin per baris)</label>
       <textarea rows={5} value={isi.misi || ''} onChange={ubah('misi')} style={gayaInput} />
+      <label>Program kerja (satu program per baris)</label>
+      <textarea rows={6} value={isi.program_kerja || ''} onChange={ubah('program_kerja')}
+        placeholder={'Contoh:\nLomba kebersihan kelas setiap bulan\nPojok baca di setiap kelas\nBank sampah sekolah'} style={gayaInput} />
       <label>Video kampanye utama (link YouTube, opsional)</label>
       <input value={isi.video_url || ''} onChange={ubah('video_url')} placeholder="https://youtu.be/..." style={gayaInput} />
 

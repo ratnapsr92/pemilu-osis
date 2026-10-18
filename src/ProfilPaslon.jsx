@@ -71,19 +71,33 @@ function linkEmbed(url) {
         </details>
       )}
 
+            {k.program_kerja && (
+        <details className="kartu lipat">
+          <summary>Program Kerja</summary>
+          <ol style={{ margin: 0, paddingLeft: '20px' }}>
+            {k.program_kerja.split('\n')
+              .map((b) => b.replace(/^\s*(\d+[.)]|[-•*])\s*/, '').trim())
+              .filter(Boolean)
+              .map((b, i) => <li key={i} style={{ marginBottom: '6px' }}>{b}</li>)}
+          </ol>
+        </details>
+      )}
       {/* Galeri foto kegiatan */}
       {foto.length > 0 && (
         <section>
           <h3 className="judul-bagian">Dokumentasi Kegiatan</h3>
-          <div className="galeri">
+                    <div className="galeri">
             {foto.map((m) => (
               <figure key={m.id}>
-                <img src={m.url} alt={m.keterangan || 'Foto kegiatan kampanye'} loading="lazy" />
+                <a href={m.url} target="_blank" rel="noreferrer">
+                  <img src={m.url} alt={m.keterangan || 'Foto kegiatan kampanye'} loading="lazy"
+                    style={{ objectFit: 'contain', background: '#f3f4f6', cursor: 'zoom-in' }} />
+                </a>
                 {m.keterangan && <figcaption>{m.keterangan}</figcaption>}
               </figure>
             ))}
           </div>
-          {foto.length > 1 && <p className="petunjuk">← geser untuk melihat foto lainnya →</p>}
+                    {foto.length > 1 && <p className="petunjuk">← geser untuk melihat foto lainnya →</p>}
         </section>
       )}
 

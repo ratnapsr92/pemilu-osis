@@ -60,6 +60,8 @@ function Kaki() {
       <b>PILANG</b> · Pilihan Langsung — UPT SMP Negeri 2 Semanding
       <br />
       Tubernova Award 2026
+              <br />
+        <a href="/panduan.pdf" target="_blank" rel="noreferrer">📘 Buku Panduan PILANG</a>
     </footer>
   )
 }
